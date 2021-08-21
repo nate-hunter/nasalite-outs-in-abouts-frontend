@@ -28,11 +28,27 @@ function App() {
   const [userPosition, setUserPosition] = useState(null);
   const [spots, setSpots] = useState([]);
   const [currentPlaceId, setCurrentPlaceId] = useState(null);
+  const [newPlace, setNewPlace] = useState(null);
+  const [title, setTitle] = useState(null);
+  const [description, setDescription] = useState(null);
+  const [star, setStar] = useState(null);
 
   const handleSpotClick = (id, lat, lon) => {
     setCurrentPlaceId(id);
     setViewport({ ...viewport, latitude: lat, longitude: lon })
   }
+
+  const handleAddClick = (e) => {
+    const [lon, lat] = e.lngLat;
+    setNewPlace({
+      lat,
+      lon
+    })
+  }
+
+  // const handleMapClick = (e) => {
+
+  // }
 
   useEffect(() => {
     const getSpots = async () => {
@@ -79,9 +95,8 @@ function App() {
         mapStyle='mapbox://styles/mapbox/light-v10'
         mapboxApiAccessToken={process.env.REACT_APP_MAPBOX_TOKEN}
         onViewportChange={newViewport => setViewport(newViewport)}
-        // onClick={handleMapClick}
+        onDblClick={handleAddClick}
         {...viewport}
-        // onViewportChange={nextViewport => setViewport(nextViewport)}
       >
         <div>
           <NavigationControl
@@ -139,6 +154,46 @@ function App() {
           </>
         ))}
 
+
+        {newPlace && (
+          <>
+            <Popup
+            latitude={newPlace.lat}
+            longitude={newPlace.lon}
+            closeButton={true}
+            closeOnClick={false}
+            onClose={() => setNewPlace(null)}
+            anchor='left'
+            >
+              <div>
+                <form>
+                  <label>Title</label>
+                  <input
+                    placeholder="Enter a Title"
+                    autoFocus
+                    // onChange={(e)=>setTitle(e.target.value)}
+                    />
+                  <label>Description</label>
+                  <textarea 
+                    placeholder="What's about this place?"
+                    // onChange={(e)=>setDescription(e.target.value)}
+                  />
+                  <label>Rating</label>
+                  <select>
+                    <option value='1'>1</option>
+                    <option value='2'>2</option>
+                    <option value='3'>3</option>
+                    <option value='4'>4</option>
+                    <option value='5'>5</option>
+                  </select>
+                  <button type="submit" className="submitButton">
+                    Save Spot To Map
+                  </button>
+                </form>
+              </div>
+            </Popup>
+          </>
+        )}
         
       </ReactMapGL>
     </div>
