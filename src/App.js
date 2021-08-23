@@ -31,7 +31,7 @@ function App() {
   const [newPlace, setNewPlace] = useState(null);
   const [title, setTitle] = useState(null);
   const [description, setDescription] = useState(null);
-  const [star, setStar] = useState(null);
+  const [star, setStar] = useState(0);
 
   const handleSpotClick = (id, lat, lon) => {
     setCurrentPlaceId(id);
@@ -50,11 +50,33 @@ function App() {
 
   // }
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const newSpot = {
+      username: currentUser,
+      title,
+      description,
+      rating: star,
+      lat: newPlace.lat,
+      lon: newPlace.lon
+    }
+
+    try {
+      const resp = await axios.post('/spots', newSpot);
+      setSpots([ ...spots, resp.data ]);
+      setNewPlace(null);
+    } catch (error) {
+      console.log('Error:\n', error);
+    }
+
+  }
+
   useEffect(() => {
     const getSpots = async () => {
       try {
         const spots = await axios.get('/spots');
-        console.log('spots?', spots)
+        console.log('spots?', spots, '\n\tVIEWPORT ZOOM:', viewport.zoom)
         setSpots(spots.data);
       } catch (error) {
         console.log(error);
@@ -85,6 +107,14 @@ function App() {
     }
   }
 
+  const listStars = (rating) => {
+    let starArr = [];
+    for (let i = 0; i < rating; i++) {
+      starArr.push(<Star key={i} className='star' />)
+    }
+    return starArr;
+  }
+
   return (
     <div>
       <h1>NasaLite's OutsInAbouts</h1>
@@ -108,12 +138,12 @@ function App() {
             <Marker
                 latitude={spot.lat}
                 longitude={spot.lon}
-                // offsetLeft={-20}
-                // offsetRight={-10}
+                // offsetLeft={-viewport.zoom * 1}
+                // offsetTop={-viewport.zoom * 3}
               >
                 <FiberManualRecord 
                   style={{
-                    fontSize: 2 * viewport.zoom,
+                    fontSize: 3 * viewport.zoom,
                     color: spot.username === currentUser ? 'lightseagreen' : 'slateblue', 
                     cursor: 'pointer',
                   }}
@@ -138,10 +168,9 @@ function App() {
                   <p className='desc'>{spot.description}</p>
                   <label>Rating</label>
                   <div className='stars'>
-                    <Star className='star' />
-                    <Star className='star' />
-                    <Star className='star' />
-                    <Star className='star' />
+                    {
+                      listStars(spot.rating).map(star => star)
+                    }
                   </div>
                   <label>Information</label>
                   <span className='username'>
@@ -166,20 +195,20 @@ function App() {
             anchor='left'
             >
               <div>
-                <form>
+                <form onSubmit={handleSubmit}>
                   <label>Title</label>
                   <input
                     placeholder="Enter a Title"
                     autoFocus
-                    // onChange={(e)=>setTitle(e.target.value)}
+                    onChange={(e) => setTitle(e.target.value)}
                     />
                   <label>Description</label>
                   <textarea 
                     placeholder="What's about this place?"
-                    // onChange={(e)=>setDescription(e.target.value)}
+                    onChange={(e) => setDescription(e.target.value)}
                   />
                   <label>Rating</label>
-                  <select>
+                  <select onChange={(e) => setStar(e.target.value)}>
                     <option value='1'>1</option>
                     <option value='2'>2</option>
                     <option value='3'>3</option>
